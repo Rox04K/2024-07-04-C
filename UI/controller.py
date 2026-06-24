@@ -10,6 +10,23 @@ class Controller:
         # the model, which implements the logic of the program and holds the data
         self._model = model
 
+    def fillDD(self):
+        opzioni = self._model.getAnni()
+
+        opzioniDD = list(map(lambda x: ft.dropdown.Option(
+            key=x,
+            data=x,
+            on_click=self.fillDDShape
+        ), opzioni))
+        self._view.ddyear.options = opzioniDD
+
+    def fillDDShape(self, e):
+        opzioni = self._model.getForme()
+
+        opzioniDD = list(map(lambda x: ft.dropdown.Option(x), opzioni))
+        self._view.ddshape.options = opzioniDD
+        self._view.update_page()
+
     def handle_graph(self, e):
         pass
 
