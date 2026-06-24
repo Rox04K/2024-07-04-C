@@ -55,4 +55,11 @@ class Controller:
         self._view.update_page()
 
     def handle_path(self, e):
-        pass
+        vertici, punteggio = self._model.getCamminoOttimo()
+        self._view.txt_result2.controls.clear()
+        self._view.txt_result2.controls.append(
+            ft.Text(f'Il cammino ottimo ha un punteggio di {punteggio} ed è composto da {len(vertici)} ordini'))
+        for s in vertici:
+            self._view.txt_result2.controls.append(ft.Text(f'{s}'))
+
+        self._view.update_page()

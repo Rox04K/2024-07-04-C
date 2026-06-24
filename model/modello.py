@@ -1,3 +1,5 @@
+import copy
+
 from database.DAO import DAO
 import networkx as nx
 
@@ -7,7 +9,7 @@ class Model:
         self._IDMap = {}
 
         self._bestCammino = []
-        self._bestLunghezza = 0
+        self._bestPunteggio = 0
 
     def getAnni(self):
         return DAO.getYears()
@@ -44,24 +46,56 @@ class Model:
         archi_ordinati = sorted(self._grafo.edges(data=True), key=lambda x: x[2]['weight'], reverse=True)
         return archi_ordinati[:5]
 
-    ''' METODO DI RICORSIONE '''
-
-    def getCammino(self):
-        # Prima di tutto bisogna reimpostare i valori della ricorsione a 0 perchè così non salviamo valori vecchi
+    def getCamminoOttimo(self):
         self._bestCammino = []
-        self._bestLunghezza = 0
+        self._bestPunteggio = 0
 
-        # Poi prepariamo la base della ricorsione. Ci sono diversi tipi di ricorsione che vengono trattati nella parte apposita
-        parziale = []
+        mesi = {i:0 for i in range(1,13)}
 
         for n in self._grafo.nodes():
+            mesi[n.datetime.month] += 1
+            parziale = [n]
+            self._ricorsione(parziale, mesi)
+            mesi[n.datetime.month] -= 1
+
+
+        return self._bestCammino, self._bestPunteggio
+
+    def _ricorsione(self, parziale, mesi):
+        validi = self._getSuccessors(parziale, mesi)
+        if validi == []:
+            pesoAttuale = self._peso(parziale)
+            if pesoAttuale > self._bestPunteggio:
+                self._bestCammino = copy.deepcopy(parziale)
+                self._bestPunteggio = pesoAttuale
+
+        for n in validi:
+            mesi[n.datetime.month] += 1
             parziale.append(n)
-            self.ricorsione(parziale)
+            self._ricorsione(parziale, mesi)
+            mesi[n.datetime.month] -= 1
             parziale.pop()
 
-        return self._bestCammino, (self._bestLunghezza - 1)
+    def _getSuccessors(self, parziale, mesi):
+        succ = self._grafo.successors(parziale[-1])
+        validi = []
 
-    def ricorsione(self, parziale):
-        # Qui scriviamo il metodo ricorsivo
-        pass
+        for n in succ:
+            if n not in parziale:
+                if mesi[n.datetime.month] < 3:
+                    if len(parziale) >= 2:
+                        if self._grafo[parziale[-1]][n]['weight'] < self._grafo[parziale[-2]][parziale[-1]]['weight']:
+                            validi.append(n)
+                    else:
+                        validi.append(n)
 
+        return validi
+
+    def _peso(self, parziale):
+        peso = 100*len(parziale)
+        for p in range(len(parziale)-1):
+            u= parziale[p]
+            v= parziale[p+1]
+            if u.datetime.month == v.datetime.month:
+                peso += 200
+        return peso
