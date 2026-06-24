@@ -13,7 +13,8 @@ print(f'I 5 archi di peso maggiore sono:')
 for u, v, data in bestArchi:
     print(f'{u} -> {v} | weight = {data['weight']}')
 print()
-stati, punteggio = model.getCamminoOttimo()
+stati, punteggio = model.cammino_ottimo()
 print(f'Il cammino ottimo ha un punteggio di {punteggio} e visita {len(stati)} stati')
 for s in stati:
     print(f'{s}')
+
