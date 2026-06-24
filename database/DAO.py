@@ -28,7 +28,7 @@ class DAO():
         return result
 
     @staticmethod
-    def getShapes():
+    def getShapes(anno):
         cnx = DBConnect.get_connection()
         result = []
         if cnx is None:
@@ -38,8 +38,9 @@ class DAO():
             query = """select distinct shape
                         from sighting s 
                         where shape != ""
+                        and year(datetime) = %s
                         order by shape asc"""
-            cursor.execute(query)
+            cursor.execute(query, (anno,))
 
             for row in cursor:
                 result.append(row['shape'])
@@ -49,47 +50,46 @@ class DAO():
         return result
 
     @staticmethod
-    def get_all_states():
+    def getNodi(anno, forma):
         cnx = DBConnect.get_connection()
         result = []
         if cnx is None:
             print("Connessione fallita")
         else:
             cursor = cnx.cursor(dictionary=True)
-            query = """select * 
-                    from state s"""
-            cursor.execute(query)
+            query = """select *
+                        from sighting s 
+                        where shape = %s
+                        and year(datetime) = %s """
+            cursor.execute(query, (forma, anno,))
 
             for row in cursor:
-                result.append(
-                    State(row["id"],
-                          row["Name"],
-                          row["Capital"],
-                          row["Lat"],
-                          row["Lng"],
-                          row["Area"],
-                          row["Population"],
-                          row["Neighbors"]))
-
+                result.append(Sighting(**row))
             cursor.close()
             cnx.close()
         return result
 
     @staticmethod
-    def get_all_sightings():
+    def getArchi(anno, forma, mappa):
         cnx = DBConnect.get_connection()
         result = []
         if cnx is None:
             print("Connessione fallita")
         else:
             cursor = cnx.cursor(dictionary=True)
-            query = """select * 
-                    from sighting s 
-                    order by `datetime` asc """
-            cursor.execute(query)
+            query = """with nodi as(
+                        select *
+                        from sighting s 
+                        where shape = %s
+                        and year(datetime) = %s)
+                        select n1.id as a1, n2.id as a2
+                        from nodi n1, nodi n2
+                        where n1.id > n2.id
+                        and n1.state = n2.state"""
+            cursor.execute(query, (forma, anno,))
 
             for row in cursor:
-                result.append(Sighting(**row))
+                result.append((mappa[row['a1']], mappa[row['a2']]))
             cursor.close()
             cnx.close()
         return result

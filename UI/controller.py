@@ -21,14 +21,38 @@ class Controller:
         self._view.ddyear.options = opzioniDD
 
     def fillDDShape(self, e):
-        opzioni = self._model.getForme()
+        anno = self._view.ddyear.value
+
+        opzioni = self._model.getForme(anno)
 
         opzioniDD = list(map(lambda x: ft.dropdown.Option(x), opzioni))
         self._view.ddshape.options = opzioniDD
         self._view.update_page()
 
     def handle_graph(self, e):
-        pass
+        anno = self._view.ddyear.value
+        if anno == "":
+            self._view.create_alert('Attenzione selezionare un anno!')
+            return
+
+        forma = self._view.ddshape.value
+        if forma == "":
+            self._view.create_alert('Attenzione selezionare una forma!')
+            return
+
+        self._view.txt_result1.controls.clear()
+        self._model.creaGrafo(anno, forma)
+
+        nodi,archi = self._model.getInfo()
+        self._view.txt_result1.controls.append(ft.Text(f'Numero di vertici: {nodi}'))
+        self._view.txt_result1.controls.append(ft.Text(f'Numero di archi: {archi}'))
+
+        bestArchi = self._model.getBestArchi()
+        self._view.txt_result1.controls.append(ft.Text(f'I 5 archi di peso maggiore sono:'))
+        for u,v,data in bestArchi:
+            self._view.txt_result1.controls.append(ft.Text(f'{u} -> {v} | weight = {data['weight']}'))
+
+        self._view.update_page()
 
     def handle_path(self, e):
         pass
